@@ -65,13 +65,20 @@ app.post('/form', (request, response) => {
 });
 
 app.get( '/api/time', (request, response) => {
-	let time = new Date();
-	response.render('apiTime', {time});
+	let current_time = new Date();
+	let hour = current_time.getHours();
+	let minute = current_time.getMinutes();
+	let second = current_time.getSeconds();
+	let currTime = hour + ":" + minute + ":" +second;
+
+	response.end(JSON.stringify({	
+		time: currTime
+	}) );
 });
 
 app.post('/api/users', (request, response) => {
 	username = request.body.username;
-	pas = request.body.pas;
+	pas = request.body.password;
 	gender = request.body.gender;
 	agree = request.body.agree
 	
@@ -81,6 +88,6 @@ app.post('/api/users', (request, response) => {
 });
 
 app.get('/api/users', (request, response) => {
-	response.render('apiUsers', {users: JSON.stringify(arrayOfPeople)});
+	response.end(JSON.stringify(arrayOfPeople));
 });
 
