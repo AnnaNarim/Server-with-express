@@ -1,29 +1,23 @@
 const path = require('path');
+const moment = require('moment');
 const bodyParser = require('body-parser');
 
 const Handlers = {};
 module.exports = Handlers;
 
 const arrayOfPeople = [];
-let username = '';
-let pas = '';
-let gender = '';
-let agree = false;
 
 Handlers.hello = (request, response) =>{
 	response.end('Hello World');
 }
 
 Handlers.time = (request, response) =>{
-	let time = new Date();
-	let hour = time.getHours();
-	let minute = time.getMinutes();
-	let second = time.getSeconds();
-	response.end(hour + ":" + minute + ":" +second);
+    const time = moment().format("HH:mm:ss"); 
+	response.end(time);
 };
 
 Handlers.formRender = (request, response) => {
-	response.sendFile('C:/Users/Пользователь/Desktop/Start/TryingServer/form.html');
+	response.render('form');
 };
 
 Handlers.result =  (request, response) => {
@@ -31,43 +25,40 @@ Handlers.result =  (request, response) => {
 };
  
 Handlers.formPost = (request, response) => {
-	username = request.body.usernameInput;
-	pas = request.body.pasInput;
-	gender = request.body.select;
-	agree = request.body.agree;
-	if (agree){
-		arrayOfPeople.push({ username: username , password: pas, gender: gender, agree: "true"})
-		//console.log("username is " + username + " "+ pas + " "+ gender + " agreed");
+	request.check('username').notEmpty().withMessage('Username field is empty');
+	request.check('password').notEmpty().withMessage('Password field is empty');
+	const errors = request.validationErrors();
+	if(errors){
+		response.render('form', {errors});
 	}
 	else {
-		arrayOfPeople.push({ username: username , password: pas, gender: gender, agree: "false"})
-		//console.log("username is " + username + " "+ pas + " "+ gender + " not agreed");
+		const { username, password, gender,agree } = request.body;
+		arrayOfPeople.push({ username, password, gender, agree: agree ? "true" : "false"});
+		response.redirect('/result');
 	}
-	console.log(arrayOfPeople)
-	response.redirect('/result');
 };
 
 Handlers.apiTime = (request, response) => {
-	let current_time = new Date();
-	let hour = current_time.getHours();
-	let minute = current_time.getMinutes();
-	let second = current_time.getSeconds();
-	let currTime = hour + ":" + minute + ":" +second;
-
-	response.end(JSON.stringify({	
-		time: currTime
-	}) );
+	const time = moment().format("HH:mm:ss");
+	response.end(JSON.stringify({time}));
 };
 
 Handlers.apiUsersPost = (request, response) => {
-	username = request.body.username;
-	pas = request.body.password;
-	gender = request.body.gender;
-	agree = request.body.agree
-	
-	arrayOfPeople.push({ username: username , password: pas, gender: gender, agree: agree})
-	console.log(arrayOfPeople)
-	response.end('posted');
+	request.check('username').notEmpty().withMessage('Username field is empty');
+	request.check('password').notEmpty().withMessage('Password field is empty');
+	const errors = request.validationErrors();
+
+	if(errors){
+		errors.forEach((elem) =>{
+			response.write(elem.msg + "\n");
+		});
+		response.end();
+	}
+	else {
+		const { username, password, gender,agree } = request.body;
+		arrayOfPeople.push({ username, password, gender, agree});
+		response.end('posted');
+	}
 };
 
 Handlers.apiUsers = (request, response) => {
